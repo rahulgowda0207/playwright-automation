@@ -1,9 +1,16 @@
 {
-  "name": "playright_ldc",
+  "name": "playwright-automation",
   "version": "1.0.0",
-  "description": "",
+  "description": "Playwright automation framework with TypeScript",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:webkit": "npx playwright test --project=webkit",
+    "report": "npx playwright show-report"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
