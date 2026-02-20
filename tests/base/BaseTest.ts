@@ -5,6 +5,7 @@ import { CartPage } from '../../pages/CartPage';
 import { CheckoutPage } from '../../pages/CheckoutPage';
 import { ProductDetailPage } from '../../pages/ProductDetailPage';
 import users from '../../data/user.json';
+import logger from '../../utils/Logger';
 
 type EcommerceFixtures = {
   loginPage: LoginPage;
@@ -84,15 +85,15 @@ export const test = base.extend<EcommerceFixtures>({
   },
 });
 
-// --- Day 5: Global beforeEach / afterEach hooks
+// --- Day 6: Winston logger replaces console.log in hooks ---
 test.beforeEach(async ({}, testInfo) => {
-  console.log(`[Hook] Starting test: "${testInfo.title}"`);
+  logger.info(`[Hook] Starting test: "${testInfo.title}"`);
 });
 
 test.afterEach(async ({}, testInfo) => {
-  console.log(`[Hook] Finished test: "${testInfo.title}" - Status: ${testInfo.status}`);
+  logger.info(`[Hook] Finished test: "${testInfo.title}" - Status: ${testInfo.status}`);
   if (testInfo.status === 'failed') {
-    console.log(`[Hook] Test "${testInfo.title}" FAILED - check report for details`);
+    logger.error(`[Hook] Test "${testInfo.title}" FAILED - check report for details`);
   }
 });
 
