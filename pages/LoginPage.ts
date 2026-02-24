@@ -1,7 +1,5 @@
-// ============================================================
-// Day 4: Advanced POM - LoginPage with method chaining,
-//        dynamic locators, and page-specific validations
-// ============================================================
+// LoginPage: page object for the SauceDemo login screen.
+// Inherits BasePage; supports method chaining.
 
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
@@ -23,7 +21,7 @@ export class LoginPage extends BasePage {
     this.loginLogo = page.locator('.login_logo');
   }
 
-  // --- Day 4: Method chaining - login actions return 'this' ---
+  // --- Method chaining - login actions return 'this' ---
 
   async enterUsername(username: string): Promise<this> {
     await this.fill(this.usernameInput, username);
@@ -40,7 +38,6 @@ export class LoginPage extends BasePage {
     return this;
   }
 
-  // Chained login: allows fluent usage
   async login(username: string, password: string): Promise<this> {
     await this.enterUsername(username);
     await this.enterPassword(password);
@@ -48,7 +45,7 @@ export class LoginPage extends BasePage {
     return this;
   }
 
-  // --- Day 4: Page-specific validations ---
+  // --- Page-specific validations ---
 
   async validateLoginPageLoaded(): Promise<this> {
     await this.validateElementVisible(this.loginLogo);
@@ -68,8 +65,9 @@ export class LoginPage extends BasePage {
     return this;
   }
 
-  // --- Day 4: Dynamic locator - select a specific user from accepted usernames list ---
+  // --- Dynamic locator: filter the accepted-usernames list by a specific name ---
+  // Fixed: uses Playwright's .filter() instead of a broken :has-text() CSS pseudo-class
   getUsernameByText(username: string): Locator {
-    return this.dynamicLocator('#login_credentials:has-text("{{value}}")', username);
+    return this.page.locator('#login_credentials').filter({ hasText: username });
   }
 }

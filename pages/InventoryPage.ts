@@ -1,8 +1,5 @@
-// ============================================================
-// Day 4: Advanced POM - InventoryPage (Product Listing)
-//        Inherits BasePage, method chaining, dynamic locators,
-//        page-specific validations
-// ============================================================
+// InventoryPage: page object for the SauceDemo product listing.
+// Inherits BasePage; supports method chaining and dynamic locators.
 
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
@@ -30,15 +27,12 @@ export class InventoryPage extends BasePage {
     this.pageTitle = page.locator('.title');
   }
 
-  // --- Day 4: Dynamic locator - find product by name ---
+  // --- Dynamic locators ---
+
   getProductByName(productName: string): Locator {
-    return this.dynamicLocator(
-      '.inventory_item:has-text("{{value}}")',
-      productName
-    );
+    return this.dynamicLocator('.inventory_item:has-text("{{value}}")', productName);
   }
 
-  // --- Day 4: Dynamic locator - add-to-cart button for a specific product ---
   getAddToCartButton(productTestId: string): Locator {
     return this.page.locator(`[data-test="add-to-cart-${productTestId}"]`);
   }
@@ -47,7 +41,7 @@ export class InventoryPage extends BasePage {
     return this.page.locator(`[data-test="remove-${productTestId}"]`);
   }
 
-  // --- Day 4: Method chaining actions ---
+  // --- Method chaining actions ---
 
   async addProductToCart(productTestId: string): Promise<this> {
     await this.click(this.getAddToCartButton(productTestId));
@@ -66,24 +60,29 @@ export class InventoryPage extends BasePage {
 
   async openCart(): Promise<this> {
     await this.click(this.cartLink);
+    // Wait for navigation to complete before returning
+    await this.page.waitForURL('**/cart.html');
     return this;
   }
 
   async logout(): Promise<this> {
     await this.click(this.burgerMenuButton);
-    // Wait for sidebar animation to complete before clicking logout
-    await this.logoutLink.waitFor({ state: 'visible', timeout: 5000 });
+    // Wait for sidebar animation using the playwright config default timeout
+    await this.logoutLink.waitFor({ state: 'visible' });
     await this.click(this.logoutLink);
+    await this.page.waitForURL('**/');
     return this;
   }
 
   async clickProductTitle(productName: string): Promise<this> {
     const productLink = this.page.locator('.inventory_item_name', { hasText: productName });
     await this.click(productLink);
+    // Wait for navigation to the product detail page
+    await this.page.waitForURL(/inventory-item/);
     return this;
   }
 
-  // --- Day 4: Page-specific validations ---
+  // --- Page-specific validations ---
 
   async validateOnInventoryPage(): Promise<this> {
     await this.validateUrl('inventory.html');

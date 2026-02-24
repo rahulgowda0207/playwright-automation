@@ -8,8 +8,8 @@ import type {
 } from '@playwright/test/reporter';
 import * as fs from 'fs';
 import * as path from 'path';
+import logger from './Logger';
 
-// --- Day 6: Data structure to track each test's result ---
 interface TestEntry {
   title: string;
   suite: string;
@@ -19,23 +19,26 @@ interface TestEntry {
   error?: string;
 }
 
-// --- Day 6: Custom Reporter class ---
-// Implements Playwright's Reporter interface with 3 lifecycle hooks:
-//   onBegin  - called once before all tests start
-//   onTestEnd - called after each individual test completes
-//   onEnd    - called once after all tests finish (generates report here)
 class CustomHtmlReporter implements Reporter {
   private results: TestEntry[] = [];
   private suiteStartTime: Date = new Date();
 
-  // Day 6: Called once before all tests begin
-  onBegin(config: FullConfig, suite: Suite): void {
-    this.suiteStartTime = new Date();
-    console.log(`\n[CustomReporter] Test run started at ${this.suiteStartTime.toISOString()}`);
-    console.log(`[CustomReporter] Total tests to run: ${suite.allTests().length}\n`);
+  // Sanitise user-controlled strings before embedding in HTML
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
-  // Day 6: Called after each individual test completes
+  onBegin(_config: FullConfig, suite: Suite): void {
+    this.suiteStartTime = new Date();
+    logger.info(`[Reporter] Test run started at ${this.suiteStartTime.toISOString()}`);
+    logger.info(`[Reporter] Total tests to run: ${suite.allTests().length}`);
+  }
+
   onTestEnd(test: TestCase, result: TestResult): void {
     this.results.push({
       title: test.title,
@@ -47,8 +50,7 @@ class CustomHtmlReporter implements Reporter {
     });
   }
 
-  // Day 6: Called once after all tests finish - generates the HTML report
-  onEnd(result: FullResult): void {
+  onEnd(_result: FullResult): void {
     const endTime = new Date();
     const totalDuration = endTime.getTime() - this.suiteStartTime.getTime();
 
@@ -56,21 +58,27 @@ class CustomHtmlReporter implements Reporter {
     const failed = this.results.filter((r) => r.status === 'failed').length;
     const skipped = this.results.filter((r) => r.status === 'skipped').length;
 
-    // Day 6: Generate HTML and write to reports/custom-report.html
-    const html = this.buildHtml(passed, failed, skipped, totalDuration);
-
-    const reportsDir = path.resolve('reports');
-    if (!fs.existsSync(reportsDir)) {
-      fs.mkdirSync(reportsDir, { recursive: true });
+    try {
+      const html = this.buildHtml(passed, failed, skipped, totalDuration);
+      const reportsDir = path.resolve('reports');
+      if (!fs.existsSync(reportsDir)) {
+        fs.mkdirSync(reportsDir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(reportsDir, 'custom-report.html'), html, 'utf-8');
+      logger.info(`[Reporter] Report generated at reports/custom-report.html`);
+    } catch (error) {
+      logger.error(
+        `[Reporter] Failed to generate HTML report: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
-    fs.writeFileSync(path.join(reportsDir, 'custom-report.html'), html, 'utf-8');
 
-    console.log(`\n[CustomReporter] Report generated at reports/custom-report.html`);
-    console.log(`[CustomReporter] Results: ${passed} passed, ${failed} failed, ${skipped} skipped\n`);
+    logger.info(
+      `[Reporter] Results: ${passed} passed, ${failed} failed, ${skipped} skipped`
+    );
   }
 
-  // --- Day 6: HTML generation helper ---
-  // Builds a self-contained HTML page with inline CSS (no external dependencies)
   private buildHtml(
     passed: number,
     failed: number,
@@ -80,13 +88,13 @@ class CustomHtmlReporter implements Reporter {
     const rows = this.results
       .map(
         (r) => `
-      <tr class="${r.status}">
-        <td>${r.suite}</td>
-        <td>${r.title}</td>
-        <td class="status">${r.status.toUpperCase()}</td>
+      <tr class="${this.escapeHtml(r.status)}">
+        <td>${this.escapeHtml(r.suite)}</td>
+        <td>${this.escapeHtml(r.title)}</td>
+        <td class="status">${this.escapeHtml(r.status.toUpperCase())}</td>
         <td>${(r.duration / 1000).toFixed(2)}s</td>
-        <td>${r.startTime}</td>
-        <td>${r.error || '-'}</td>
+        <td>${this.escapeHtml(r.startTime)}</td>
+        <td>${r.error ? this.escapeHtml(r.error) : '-'}</td>
       </tr>`
       )
       .join('');
@@ -95,7 +103,7 @@ class CustomHtmlReporter implements Reporter {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Day 6 - Custom Test Report</title>
+  <title>Test Execution Report</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
     h1 { color: #333; }
@@ -117,7 +125,7 @@ class CustomHtmlReporter implements Reporter {
   </style>
 </head>
 <body>
-  <h1>Day 6 - Custom Test Execution Report</h1>
+  <h1>Test Execution Report</h1>
   <p class="timestamp">Generated: ${new Date().toISOString()} | Total Duration: ${(totalDuration / 1000).toFixed(2)}s</p>
   <div class="summary">
     <div class="summary-card passed">Passed: ${passed}</div>

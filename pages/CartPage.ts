@@ -1,8 +1,5 @@
-// ============================================================
-// Day 4: Advanced POM - CartPage (Shopping Cart)
-//        Inherits BasePage, method chaining, dynamic locators,
-//        page-specific validations
-// ============================================================
+// CartPage: page object for the SauceDemo shopping cart.
+// Inherits BasePage; supports method chaining and dynamic locators.
 
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
@@ -22,17 +19,17 @@ export class CartPage extends BasePage {
     this.pageTitle = page.locator('.title');
   }
 
-  // --- Day 4: Dynamic locator - find cart item by product name ---
+  // --- Dynamic locators ---
+
   getCartItemByName(productName: string): Locator {
     return this.dynamicLocator('.cart_item:has-text("{{value}}")', productName);
   }
 
-  // --- Day 4: Dynamic locator - remove button for specific product in cart ---
   getRemoveButtonByTestId(productTestId: string): Locator {
     return this.page.locator(`[data-test="remove-${productTestId}"]`);
   }
 
-  // --- Day 4: Method chaining actions ---
+  // --- Method chaining actions ---
 
   async removeItem(productTestId: string): Promise<this> {
     await this.click(this.getRemoveButtonByTestId(productTestId));
@@ -41,15 +38,19 @@ export class CartPage extends BasePage {
 
   async proceedToCheckout(): Promise<this> {
     await this.click(this.checkoutButton);
+    // Wait for navigation to checkout step one
+    await this.page.waitForURL('**/checkout-step-one.html');
     return this;
   }
 
   async continueShopping(): Promise<this> {
     await this.click(this.continueShoppingButton);
+    // Wait for navigation back to inventory
+    await this.page.waitForURL('**/inventory.html');
     return this;
   }
 
-  // --- Day 4: Page-specific validations ---
+  // --- Page-specific validations ---
 
   async validateOnCartPage(): Promise<this> {
     await this.validateUrl('cart.html');

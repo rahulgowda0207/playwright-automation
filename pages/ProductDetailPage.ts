@@ -1,8 +1,5 @@
-// ============================================================
-// Day 4: Advanced POM - ProductDetailPage (Individual Product)
-//        Inherits BasePage, method chaining, dynamic locators,
-//        page-specific validations
-// ============================================================
+// ProductDetailPage: page object for a single SauceDemo product.
+// Inherits BasePage; supports method chaining.
 
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
@@ -28,10 +25,12 @@ export class ProductDetailPage extends BasePage {
     this.backToProductsButton = page.locator('[data-test="back-to-products"]');
   }
 
-  // --- Day 4: Method chaining actions ---
+  // --- Method chaining actions ---
 
   async addToCart(): Promise<this> {
     await this.click(this.addToCartButton);
+    // Wait for the Remove button to appear — confirms the cart was updated
+    await this.removeButton.waitFor({ state: 'visible' });
     return this;
   }
 
@@ -42,10 +41,12 @@ export class ProductDetailPage extends BasePage {
 
   async goBackToProducts(): Promise<this> {
     await this.click(this.backToProductsButton);
+    // Wait for navigation back to the inventory page
+    await this.page.waitForURL('**/inventory.html');
     return this;
   }
 
-  // --- Day 4: Page-specific validations ---
+  // --- Page-specific validations ---
 
   async validateOnProductDetailPage(): Promise<this> {
     await this.validateUrl('inventory-item.html');

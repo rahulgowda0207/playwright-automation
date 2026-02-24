@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 export const envConfig = {
   dev: {
     baseUrl: process.env.DEV_BASE_URL,

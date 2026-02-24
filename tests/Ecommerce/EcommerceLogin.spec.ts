@@ -20,7 +20,6 @@ test('E-commerce login using reusable BasePage methods', async ({ page, loginPag
 // Day 4: Login Tests - Method Chaining & Page Validations
 test.describe('Day 4: Login Page - Method Chaining & Validations', () => {
 
-  // Basic login using method chaining - login() returns 'this' for fluent API
   test('Login with valid credentials using method chaining', async ({ page, loginPage }) => {
     // Day 5: loginPage fixture auto-injects LoginPage instance (no manual new LoginPage())
     await page.goto('/');
@@ -56,8 +55,6 @@ test.describe('Day 4: Login Page - Method Chaining & Validations', () => {
 
     // Page-specific validation - validates error element visible and contains text
     await loginPage.validateErrorMessage('Username and password do not match');
-
-    await loginPage.takeScreenshot('day4-login-error');
   });
 
   // Day 4: Locked out user - page-specific validation for locked account error
@@ -96,7 +93,6 @@ test.describe('Day 4: Inventory Page - Dynamic Locators & Product Interactions',
     // Page-specific validation - cart badge shows correct count
     await inventoryPage.validateCartBadgeCount('1');
 
-    await inventoryPage.takeScreenshot('day4-product-added');
   });
 
   // Day 4: Dynamic locators for add/remove - builds selectors dynamically per product
@@ -224,8 +220,6 @@ test.describe('Day 4: Cart & Checkout - Full E2E Flow with All Page Classes', ()
     // Page-specific validation - order completion message
     await checkoutPage.validateOnCheckoutComplete();
     await checkoutPage.validateOrderComplete();
-
-    await checkoutPage.takeScreenshot('day4-order-complete');
   });
 
   // Day 4: Page-specific validation - empty cart check
@@ -377,6 +371,6 @@ test.describe('Day 5: Hooks - beforeEach/afterEach Logging & Cleanup', () => {
     // beforeEach hook logs start, auth fixture logs in automatically
     const inventoryPage = new InventoryPage(authenticatedPage);
     await inventoryPage.validateOnInventoryPage();
-    await inventoryPage.takeScreenshot('day5-hooks-test');
+    
   });
 });

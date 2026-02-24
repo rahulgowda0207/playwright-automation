@@ -25,19 +25,18 @@ const consoleFormat = format.combine(
 );
 
 // --- Day 6: Winston logger singleton ---
-// level: 'debug' captures all levels (debug, info, warn, error)
-// Console transport: colorized output in terminal
-// File transport: writes to logs/test-execution.log (overwritten each run)
 const logger = createLogger({
-  level: 'debug',
+  level: process.env.LOG_LEVEL || 'debug',
   transports: [
     new transports.Console({
       format: consoleFormat,
     }),
+    // Use a per-process logfile to avoid multiple workers writing
+    // to the same file concurrently. Also explicitly append.
     new transports.File({
-      filename: 'logs/test-execution.log',
+      filename: `logs/test-execution-${process.pid}.log`,
       format: fileFormat,
-      options: { flags: 'w' }, // Day 6: Overwrite on each run for clean logs
+      options: { flags: 'a' },
     }),
   ],
 });

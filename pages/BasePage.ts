@@ -1,11 +1,13 @@
-// ============================================================
-// Day 4: Advanced POM - BasePage with method chaining support,
-//        dynamic locators, and reusable page validations
-// Day 6: Added Winston logger for action-level logging
-// ============================================================
+// BasePage: base class for all page objects.
+// Provides method chaining, dynamic locators, reusable
+// validations, and action-level Winston logging.
 
 import { Page, Locator, expect } from '@playwright/test';
+import * as fs from 'fs';
 import logger from '../utils/Logger';
+
+// Configurable via DEFAULT_TIMEOUT env var; falls back to 5000 ms
+const DEFAULT_TIMEOUT = parseInt(process.env.DEFAULT_TIMEOUT || '5000', 10);
 
 export class BasePage {
   protected page: Page;
@@ -14,44 +16,49 @@ export class BasePage {
     this.page = page;
   }
 
-  // --- Day 4: Method chaining - all actions return 'this' for fluent API ---
+  // --- Method chaining — all actions return 'this' for fluent API ---
 
-  async waitForElement(locator: Locator, timeout = 5000): Promise<this> {
-    logger.debug(`Waiting for element to be visible (timeout: ${timeout}ms)`);
+  async waitForElement(locator: Locator, timeout = DEFAULT_TIMEOUT): Promise<this> {
+    logger.debug(`Waiting for element: ${locator} (timeout: ${timeout}ms)`);
     await locator.waitFor({ state: 'visible', timeout });
     return this;
   }
 
   async click(locator: Locator): Promise<this> {
-    logger.info(`Clicking element`);
+    logger.info(`Clicking element: ${locator}`);
     await this.waitForElement(locator);
     await locator.click();
     return this;
   }
 
   async fill(locator: Locator, value: string): Promise<this> {
-    logger.info(`Filling element with value: "${value}"`);
+    // Value intentionally omitted from the log to avoid exposing passwords
+    logger.info(`Filling element: ${locator}`);
     await this.waitForElement(locator);
     await locator.fill(value);
     return this;
   }
 
   async scrollTo(locator: Locator): Promise<this> {
-    logger.debug(`Scrolling to element`);
+    logger.debug(`Scrolling to element: ${locator}`);
     await locator.scrollIntoViewIfNeeded();
     return this;
   }
 
   async takeScreenshot(name: string): Promise<this> {
-    logger.info(`Taking screenshot: screenshots/${name}.png`);
+    const screenshotsDir = 'screenshots';
+    if (!fs.existsSync(screenshotsDir)) {
+      fs.mkdirSync(screenshotsDir, { recursive: true });
+    }
+    logger.info(`Taking screenshot: ${screenshotsDir}/${name}.png`);
     await this.page.screenshot({
-      path: `screenshots/${name}.png`,
+      path: `${screenshotsDir}/${name}.png`,
       fullPage: true,
     });
     return this;
   }
 
-  // --- Day 4: Dynamic locator helpers - locate elements by dynamic text/attributes ---
+  // --- Dynamic locator helpers ---
 
   dynamicLocator(selector: string, dynamicValue: string): Locator {
     return this.page.locator(selector.replace('{{value}}', dynamicValue));
@@ -65,7 +72,7 @@ export class BasePage {
     return this.page.getByTestId(testId);
   }
 
-  // --- Day 4: Page-specific validation helpers ---
+  // --- Page-specific validation helpers ---
 
   async validateUrl(expectedUrlPart: string): Promise<this> {
     logger.debug(`Validating URL contains: "${expectedUrlPart}"`);

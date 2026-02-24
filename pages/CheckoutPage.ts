@@ -1,9 +1,6 @@
-// ============================================================
-// Day 4: Advanced POM - CheckoutPage (Checkout Flow)
-//        Inherits BasePage, method chaining, dynamic locators,
-//        page-specific validations
-// ============================================================
-
+// CheckoutPage: page object for the SauceDemo checkout flow
+// (step-one, step-two overview, and complete screens).
+// Inherits BasePage; supports method chaining.
 import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 
@@ -57,7 +54,7 @@ export class CheckoutPage extends BasePage {
     this.pageTitle = page.locator('.title');
   }
 
-  // --- Day 4: Method chaining - Step One form fill ---
+  // --- Method chaining - Step One form fill ---
 
   async enterFirstName(firstName: string): Promise<this> {
     await this.fill(this.firstNameInput, firstName);
@@ -81,6 +78,8 @@ export class CheckoutPage extends BasePage {
     return this;
   }
 
+  // clickContinue intentionally does NOT add a URL wait: it is also called in
+  // the error-validation tests where the URL stays on step-one.
   async clickContinue(): Promise<this> {
     await this.click(this.continueButton);
     return this;
@@ -88,15 +87,19 @@ export class CheckoutPage extends BasePage {
 
   async clickFinish(): Promise<this> {
     await this.click(this.finishButton);
+    // Wait for navigation to the order-complete screen
+    await this.page.waitForURL('**/checkout-complete.html');
     return this;
   }
 
   async clickBackHome(): Promise<this> {
     await this.click(this.backHomeButton);
+    // Wait for navigation back to the product inventory
+    await this.page.waitForURL('**/inventory.html');
     return this;
   }
 
-  // --- Day 4: Page-specific validations ---
+  // --- Page-specific validations ---
 
   async validateOnCheckoutStepOne(): Promise<this> {
     await this.validateUrl('checkout-step-one.html');
@@ -132,7 +135,7 @@ export class CheckoutPage extends BasePage {
     return await this.getText(this.totalLabel);
   }
 
-  // --- Day 4: Dynamic locator - find summary item by name ---
+  // --- Dynamic locator - find summary item by name ---
   getSummaryItemByName(productName: string): Locator {
     return this.dynamicLocator('.cart_item:has-text("{{value}}")', productName);
   }
